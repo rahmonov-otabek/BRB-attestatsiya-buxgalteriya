@@ -381,39 +381,52 @@
             showQuestion();
         }
 
-        function showQuestion() {
-            if (currentQuestion >= currentTests.length) {
-                finishTest();
-                return;
-            }
-
-            const test = currentTests[currentQuestion];
-            const container = document.getElementById('testContainer');
-            
-            container.innerHTML = '';
-
-            let answersHtml = '';
-            test.answers.forEach((answer, index) => {
-                answersHtml += `<div class="answer-option" onclick="selectAnswer(${index})" id="answer${index}">${answer}</div>`;
-            });
-
-            container.innerHTML = `
-                <div class="test-card">
-                    <div class="question-header">
-                        Savol ${currentQuestion + 1} / ${currentTests.length}
-                    </div>
-                    <div class="question-text">${test.question}</div>
-                    <div class="answers">
-                        ${answersHtml}
-                    </div>
-                </div>
-            `;
-
-            selectedAnswerIndex = -1;
-            isAnswered = false;
-            
-            document.getElementById('nextBtn').classList.add('hidden');
+    function showQuestion() {
+        if (currentQuestion >= currentTests.length) {
+            finishTest();
+            return;
         }
+
+        const test = currentTests[currentQuestion];
+        const container = document.getElementById('testContainer');
+
+        container.innerHTML = '';
+
+        // 🔥 1) Javoblarni ko‘chirib olamiz (asl tartibini buzmaslik uchun)
+        let shuffledAnswers = [...test.answers];
+
+        // 🔥 2) Fisher–Yates algoritmi bilan aralashtiramiz
+        for (let i = shuffledAnswers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledAnswers[i], shuffledAnswers[j]] = [shuffledAnswers[j], shuffledAnswers[i]];
+        }
+
+        // 🔥 3) Index almashtirilgani uchun to‘g‘ri javobning yangi indexini topib olamiz
+        test.shuffledCorrectIndex = shuffledAnswers.indexOf(test.answers[test.correctIndex]);
+
+        // 🔥 4) HTML generatsiya qilamiz
+        let answersHtml = '';
+        shuffledAnswers.forEach((answer, index) => {
+            answersHtml += `<div class="answer-option" onclick="selectAnswer(${index})" id="answer${index}">${answer}</div>`;
+        });
+
+        container.innerHTML = `
+            <div class="test-card">
+                <div class="question-header">
+                    Savol ${currentQuestion + 1} / ${currentTests.length}
+                </div>
+                <div class="question-text">${test.question}</div>
+                <div class="answers">
+                    ${answersHtml}
+                </div>
+            </div>
+        `;
+
+        selectedAnswerIndex = -1;
+        isAnswered = false;
+
+        document.getElementById('nextBtn').classList.add('hidden');
+    }
 
         function selectAnswer(index) {
             if (isAnswered) return;
